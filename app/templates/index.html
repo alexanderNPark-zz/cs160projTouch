@@ -1,0 +1,238 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Touch Gestures Prototype</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="{% static '/vendors/bootstrap/css/bootstrap.css' %}" />
+	<link rel="stylesheet" type="text/css" href="{% static '/css/main.css' %}" />
+
+	<script src="{% static '/vendors/jquery/jquery-3.3.1.min.js' %}"></script>
+	<script src="{% static '/vendors/jquery-ui/jquery-ui.min.js' %}"></script>
+	<script src="{% static '/vendors/hammer/hammer.min.js' %}"></script>
+	<script src="{% static '/vendors/hammer/jquery.hammer.js' %}"></script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+	<style type="text/css">
+		body {
+			margin:0;
+			padding:0;
+		}
+
+		.box-container {
+			display: flex;
+			flex-wrap: wrap;
+		}
+
+		.large-box {
+			width: 100%;
+			height: 300px;
+			background: #0d124a;
+			padding: 5px;
+			margin: 0 10px 10px 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.small-box {
+			width: 100px;
+			height: 100px;
+			background: #7ce6df;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.action-complete {
+			background: #ffffff;
+		}
+	</style>
+
+</head>
+
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-12">
+				<h3>Task 4</h3>
+				<div class="box-container">
+					<div class="large-box">
+						<div class="small-box" id="rotate-box">Rotate</div>
+					</div>
+					<div class="large-box">
+						<div class="small-box" id="pinch-box">Pinch</div>
+					</div>
+					<div class="large-box">
+						<div class="small-box" id="press-box">Press</div>
+					</div>
+					<div class="large-box">
+						<div class="small-box" id="pan-box">Pan</div>
+					</div>
+					<div class="large-box">
+						<div class="small-box" id="tap-box">Tap</div>
+					</div>
+					<div class="large-box">
+						<div class="small-box" id="swipe-box">Swipe</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+	  // your solution here
+    /*
+    
+    var hammerTime = new Hammer(document.getElementById('rotate-box'))
+    //hammerTime.get("rotate").set({ enable: true});
+    hammerTime.get('pinch').set({ enable: true });
+  // hammerTime.add(new Hammer.Rotate({ threshold: 0 })).recognizeWith(hammerTime.get('pan'));
+    hammerTime.on('rotate', function(ev) {
+      event.preventDefault();
+      event.stopPropagation() 
+	     //requestElementUpdate();
+    });
+  */
+    
+    
+    var mc = new Hammer(document.getElementById('rotate-box'));
+    mc.get('rotate').set({enable:true})
+    mc.on('rotate', function(ev){
+      
+      elem = ev.target  
+      elem.style.transform = "rotate("+ev.rotation+"deg)"
+    });
+
+    
+    
+    
+   panBE = document.getElementById('pan-box')
+    panBE.style.position = "absolute"
+   var panBox = new Hammer(panBE, {
+  inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+});
+    
+   panBox.get('pan').set({ direction: Hammer.DIRECTION_ALL, threshold: 0}); 
+   
+    //inspiration from https://codepen.io/bladnman/pen/LEWYYN
+   var prevX = 0;
+   var prevY = 0;
+   var isDragging = false;
+    
+   panBox.on('pan',function(ev){
+     
+        var elem = ev.target;
+        if ( ! isDragging ) {
+            isDragging = true;
+            prevX = elem.offsetLeft;
+            prevY = elem.offsetTop;
+            
+        }
+        posX = ev.deltaX + prevX;
+        posY = ev.deltaY + prevY;
+
+       
+        elem.style.left = posX + "px";
+        elem.style.top = posY + "px";
+        
+        if (ev.isFinal) {
+            isDragging = false;
+        }
+   });
+    
+    var pressBE = document.getElementById('press-box')
+    var pressBox = new Hammer(pressBE);
+    
+    pressBox.on('press',function(ev){
+       $("#press-box").css({"border": "10px solid red"});
+     
+    })
+    
+     pressBox.on('pressup',function(ev){
+      
+        $("#press-box").css("border","none");
+        
+    })
+    
+    var pinchBE = document.getElementById('pinch-box')
+    var pinchBox = new Hammer(pinchBE);
+    
+    
+   
+   pinchBox.get('pinch').set({enable:true})
+   pinchBox.on('pinchout',function(ev){
+         var elem = ev.target;
+         
+          if($("#pinch-box").width()>300 && $("#pinch-box").height()>300){
+            return;
+          }
+         $("#pinch-box").width($("#pinch-box").width()+2);
+          $("#pinch-box").height($("#pinch-box").height()+2);
+        
+   });
+    
+     pinchBox.on('pinchin',function(ev){
+         var elem = ev.target;
+         if($("#pinch-box").width()<100 || $("#pinch-box").height()<100){
+            return;
+          }
+          $("#pinch-box").width($("#pinch-box").width()-2);
+          $("#pinch-box").height($("#pinch-box").height()-2);
+        
+   });
+    
+    
+    var tapBE = document.getElementById('tap-box')
+    var tapBox = new Hammer(tapBE);
+    
+    var selected = false;
+    tapBox.on("tap", function(event){
+      if(selected){
+        selected = !selected
+          $("#tap-box").css({"background": "#FF00FF"});
+        
+      }else{
+        selected = !selected
+         $("#tap-box").css({"background": " #7ce6df"});
+      }
+    })
+    
+    var swipeBE = document.getElementById('swipe-box')
+    var swipeBox = new Hammer(swipeBE);
+    
+     swipeBox.on("swipeleft", function(ev){
+       if(parseInt($("#swipe-box").css("margin-right").replace('px', ''))>=600){
+          $("#swipe-box").animate({"margin-right": '600px'});
+         return;
+       }
+         
+            $("#swipe-box").animate({"margin-right": '+='+(-1)*ev.velocityX*200});
+      
+       
+       
+     })
+    
+    swipeBox.on("swiperight", function(ev){
+        if(parseInt($("#swipe-box").css("margin-right").replace('px', ''))<=-600){
+          $("#swipe-box").animate({"margin-right": '-600px'});
+         return;
+       }
+         
+            $("#swipe-box").animate({"margin-right": '-='+ev.velocityX*200});
+     })
+    
+    
+    
+    
+    
+    
+   
+
+    
+  </script>
+</body>
+</html>
